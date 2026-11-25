@@ -16,5 +16,3 @@ Results: "escaped soul" (tests miss it), "buried" (tests catch it), "lost" (brok
 
 Theme: one underworld theme everywhere (names, colors, icons). Explanations stay in
 plain English. Severity stays plain: critical, warning, nitpick.
-
-Built for the Kiroween 2026 hackathon (Frankenstein category).
