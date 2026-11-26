@@ -11,6 +11,7 @@
     "test:props:full": "cross-env HADES_PROPERTY_RUNS=20 HADES_PROPERTY_TIMEOUT_MS=900000 npm run test -w @hades/engine -- test/properties.test.ts"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "vite": "^6.4.6"
   }
 }

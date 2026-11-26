@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, symlinkSync } from "node:fs";
+import { existsSync, mkdirSync, readlinkSync, symlinkSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { git, makeRepo } from "./repo.js";
@@ -34,7 +34,8 @@ describe("test helpers", () => {
         process.platform === "win32" ? "junction" : "dir",
       );
       const before = snapshot(repo.dir);
-      expect(before.files["linked"]).toBe(`link:${path.join(repo.dir, "target")}`);
+      // Some Node versions include a trailing separator in Windows junction targets.
+      expect(before.files["linked"]).toBe(`link:${readlinkSync(link)}`);
       mkdirSync(path.join(repo.dir, "target", "unseen"), { recursive: true });
       expect(snapshot(repo.dir).files["linked"]).toBe(before.files["linked"]);
     } finally {
