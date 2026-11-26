@@ -103,7 +103,7 @@ export const mixedFixScenario: fc.Arbitrary<MixedFixScenario> = fc
         minLength: nSource,
         maxLength: nSource,
       }),
-      laterKind: fc.constantFrom("none", "clean", "conflicting"),
+      laterKind: fc.constantFrom<Planned["laterKind"]>("none", "clean", "conflicting"),
       laterValue: fc.integer({ min: 20000, max: 29999 }),
       testStyle: fc.array(fc.constantFrom("test", "spec", "dir"), {
         minLength: nTest,
