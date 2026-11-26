@@ -1,0 +1,497 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Spike: confirm `git apply -R --3way` behaviour": [
+      {
+        "executionId": "ac1f69c1-95bb-40c4-841c-0d8901a7b026",
+        "chatSessionId": "sess_0ad9208a-ad29-4e00-816e-c69ec5b0b6ab",
+        "timestamp": 1795601808003
+      },
+      {
+        "executionId": "ac1f69c1-95bb-40c4-841c-0d8901a7b026",
+        "chatSessionId": "sess_0ad9208a-ad29-4e00-816e-c69ec5b0b6ab",
+        "timestamp": 1795601921223
+      }
+    ],
+    "1.1 Scaffold the monorepo just enough to run the spike: root `package.json`": [
+      {
+        "executionId": "47c4d545-7821-4d48-af63-dba17ef47f5d",
+        "chatSessionId": "sess_0ad9208a-ad29-4e00-816e-c69ec5b0b6ab",
+        "timestamp": 1795602108019
+      }
+    ],
+    "1.2 Write `test/spike/apply-3way.test.ts`: build a temp repo with commits A (base),": [
+      {
+        "executionId": "47c4d545-7821-4d48-af63-dba17ef47f5d",
+        "chatSessionId": "sess_0ad9208a-ad29-4e00-816e-c69ec5b0b6ab",
+        "timestamp": 1795602108129
+      }
+    ],
+    "1.3 Add the fallback variant to the same test: patch from `git diff F F^`, applied": [
+      {
+        "executionId": "47c4d545-7821-4d48-af63-dba17ef47f5d",
+        "chatSessionId": "sess_0ad9208a-ad29-4e00-816e-c69ec5b0b6ab",
+        "timestamp": 1795602108447
+      }
+    ],
+    "1.4 Run the spike on Windows (required). Record the exact `git --version` and the": [
+      {
+        "executionId": "47c4d545-7821-4d48-af63-dba17ef47f5d",
+        "chatSessionId": "sess_0ad9208a-ad29-4e00-816e-c69ec5b0b6ab",
+        "timestamp": 1795602108807
+      }
+    ],
+    "2. Checkpoint: Windows spike result recorded in `design.md` and approved before task 3": [
+      {
+        "executionId": "a57b8d44-f406-4096-a6fa-5d318bbbefcc",
+        "chatSessionId": "sess_b92ddb4c-16ec-49fb-bdbb-cc01d3e4a6cf",
+        "timestamp": 1795602338766
+      },
+      {
+        "executionId": "a57b8d44-f406-4096-a6fa-5d318bbbefcc",
+        "chatSessionId": "sess_b92ddb4c-16ec-49fb-bdbb-cc01d3e4a6cf",
+        "timestamp": 1795602352449
+      }
+    ],
+    "3. Foundation: config, errors, git exec, repo validation, report types": [
+      {
+        "executionId": "3029be71-15ab-4d54-b2de-4205b2350b4e",
+        "chatSessionId": "sess_9b2ef99a-fc78-413c-8c24-375701e09cc7",
+        "timestamp": 1795602399503
+      },
+      {
+        "executionId": "3029be71-15ab-4d54-b2de-4205b2350b4e",
+        "chatSessionId": "sess_9b2ef99a-fc78-413c-8c24-375701e09cc7",
+        "timestamp": 1795602587491
+      }
+    ],
+    "4.1 `src/history/candidates.ts`: `matchRules` with the `keyword`, `closing-issue`": [
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603522464
+      },
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603579538
+      }
+    ],
+    "4.3 `src/classify/files.ts`: default test and non-code patterns, extra patterns,": [
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603522538
+      },
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603580098
+      }
+    ],
+    "4.2 `src/history/scan.ts`: `git log -n <maxCommits>` with `%x00`/`%x1e`, trim each": [
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603581150
+      },
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603703624
+      }
+    ],
+    "4.4 `src/history/fix-diff.ts`: `changedFiles` (`-z`, `--no-renames`), `fixPatch`": [
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603581901
+      },
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603704212
+      }
+    ],
+    "4. History: scan, candidates, file selection, fix diff": [
+      {
+        "executionId": "807d140c-96ca-4f41-b400-7f009bdc4cc5",
+        "chatSessionId": "sess_12ceeae2-079d-4495-899c-29b19db8323a",
+        "timestamp": 1795603704366
+      }
+    ],
+    "5. LLM confirmation": [
+      {
+        "executionId": "d23915e6-06cd-44b2-b037-83095a62a9d8",
+        "chatSessionId": "sess_e51f666b-0cd2-4328-9ac9-3e1e612932e2",
+        "timestamp": 1795603725820
+      }
+    ],
+    "6. Checkpoint: `npm run build` and `npm test` pass; no worktrees created yet": [
+      {
+        "executionId": "55389ccd-7a7c-47da-8ead-67e0d610f815",
+        "chatSessionId": "sess_7d2bee35-f732-4c51-8784-b2ecc8a9d1eb",
+        "timestamp": 1795603952798
+      },
+      {
+        "executionId": "55389ccd-7a7c-47da-8ead-67e0d610f815",
+        "chatSessionId": "sess_7d2bee35-f732-4c51-8784-b2ecc8a9d1eb",
+        "timestamp": 1795604219756
+      }
+    ],
+    "7.1 `src/summon/process.ts`: `runCommand` with `shell: true`,": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604292391
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604371925
+      }
+    ],
+    "3.4 `src/git/exec.ts`: `runGit` via `execFile`, `GIT_TERMINAL_PROMPT=0`, `LC_ALL=C`,": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604377353
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604415902
+      }
+    ],
+    "3.5 `src/repo/validate.ts`: git >= 2.30 check, absolute path equals": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604419207
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604453530
+      }
+    ],
+    "3.6 `test/helpers/repo.ts` (`makeRepo` from a commit spec, `core.autocrlf=false`,": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604456457
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604496203
+      }
+    ],
+    "3.7 `src/report/types.ts`: `SummonLabel`, `LostReason` (all reasons, including": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604499375
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604536336
+      }
+    ],
+    "7.2 `src/summon/worktree.ts`: `createWorktree` in two steps": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604542835
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604627068
+      }
+    ],
+    "7.3 `src/summon/deps-plan.ts` and `src/summon/deps.ts` (no workspace detection": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604630262
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604692423
+      }
+    ],
+    "7.4 `src/summon/apply.ts`: reverse-apply per the spike result, success only if exit 0": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604695529
+      },
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604784858
+      }
+    ],
+    "7. Processes and worktrees": [
+      {
+        "executionId": "12a54532-c096-430c-a5d1-9350aac8b629",
+        "chatSessionId": "sess_e16c2700-54a4-464b-81bd-e0e7c84da458",
+        "timestamp": 1795604784965
+      }
+    ],
+    "8.0 Diff-based Candidates and report type updates (tasks 4.1 and 5.5 stay done;": [
+      {
+        "executionId": "7117d91e-bbcd-414a-9b7d-df72a3ebc187",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795605705695
+      },
+      {
+        "executionId": "0d2c58aa-5df0-4517-b950-b382bbfdd897",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606180052
+      }
+    ],
+    "8.1 `src/summon/baseline.ts`: baseline run with cleanup in `finally`, failure reason": [
+      {
+        "executionId": "0d2c58aa-5df0-4517-b950-b382bbfdd897",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606183127
+      },
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606578839
+      }
+    ],
+    "8.2 `src/summon/summon-one.ts` (no reruns yet): early `lost` for": [
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606581899
+      },
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606796890
+      }
+    ],
+    "8.3 `src/report/verify.ts` and totals: SHA verification for entries, `rejected`,": [
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606800748
+      },
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606985208
+      }
+    ],
+    "8.4 `src/repo/test-suite.ts` (`hasTestSuite` from `git show <base>:package.json`:": [
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795606988081
+      },
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795607202982
+      }
+    ],
+    "8.5 `test/resurrect.test.ts`: end-to-end cases from the design's testing strategy,": [
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795607206202
+      },
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795607509896
+      }
+    ],
+    "8. Summoning": [
+      {
+        "executionId": "bd1b9d69-9e14-4473-97b9-7a38828f3e99",
+        "chatSessionId": "sess_d9c7fecc-2a5e-4a11-8c42-9de7271d6c60",
+        "timestamp": 1795607510019
+      }
+    ],
+    "9. Checkpoint: `npm run build` and `npm test` pass on Windows": [
+      {
+        "executionId": "4850351b-b681-458b-9206-2a3830d10e96",
+        "chatSessionId": "sess_024cb488-2c0a-438b-a1b7-8fc47c6c601e",
+        "timestamp": 1795608185199
+      },
+      {
+        "executionId": "4850351b-b681-458b-9206-2a3830d10e96",
+        "chatSessionId": "sess_024cb488-2c0a-438b-a1b7-8fc47c6c601e",
+        "timestamp": 1795608378594
+      }
+    ],
+    "10.1 Add dev dep `tsx`; engine script `summon` (`tsx scripts/summon.ts`) and root": [
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795608820910
+      },
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795609056629
+      }
+    ],
+    "10.2 `scripts/summon.ts`: parse `<absolute repo path> [--limit N]` with": [
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795609057286
+      },
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795609309099
+      }
+    ],
+    "10.3 Ctrl+C recovery in `scripts/summon.ts`: a `SIGINT` handler in the script (not": [
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795609309728
+      },
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795609585247
+      }
+    ],
+    "10. Real-repo check script": [
+      {
+        "executionId": "9aac8d42-1b41-44d1-8bb3-e003fb8fa46c",
+        "chatSessionId": "sess_105fafe8-4a45-42c8-9174-2e5d22424cf8",
+        "timestamp": 1795609585332
+      }
+    ],
+    "11.1 `scripts/summon.ts`: add `--test-command \"<cmd>\"` and `--timeout <seconds>`": [
+      {
+        "executionId": "399a5141-b390-403b-aa01-2ed7734c4f85",
+        "chatSessionId": "sess_aeac5559-2d8f-42c4-954b-db6701a5d7b1",
+        "timestamp": 1795620217669
+      },
+      {
+        "executionId": "399a5141-b390-403b-aa01-2ed7734c4f85",
+        "chatSessionId": "sess_aeac5559-2d8f-42c4-954b-db6701a5d7b1",
+        "timestamp": 1795620558192
+      }
+    ],
+    "11.2 `src/history/dependency-change.ts`: `changesDependencies(repo, sha,": [
+      {
+        "executionId": "399a5141-b390-403b-aa01-2ed7734c4f85",
+        "chatSessionId": "sess_aeac5559-2d8f-42c4-954b-db6701a5d7b1",
+        "timestamp": 1795620217960
+      },
+      {
+        "executionId": "399a5141-b390-403b-aa01-2ed7734c4f85",
+        "chatSessionId": "sess_aeac5559-2d8f-42c4-954b-db6701a5d7b1",
+        "timestamp": 1795620558899
+      }
+    ],
+    "11. Script options and a narrower dependency check (tasks 1–10 stay done)": [
+      {
+        "executionId": "399a5141-b390-403b-aa01-2ed7734c4f85",
+        "chatSessionId": "sess_aeac5559-2d8f-42c4-954b-db6701a5d7b1",
+        "timestamp": 1795620558999
+      }
+    ],
+    "12. Checkpoint: real-repo check. Clone a real JS/TS repo outside the Hades repo (never": [
+      {
+        "executionId": "6ad57b2b-a095-4a41-bcdd-98676b5974b7",
+        "chatSessionId": "sess_aeac5559-2d8f-42c4-954b-db6701a5d7b1",
+        "timestamp": 1795622500565
+      }
+    ],
+    "13.1 `test/helpers/arbitraries.ts`: generators for file trees, mixed fix commits,": [
+      {
+        "executionId": "fd47214f-5928-4b62-9e6f-43a7a23ddbef",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795622517596
+      },
+      {
+        "executionId": "fd47214f-5928-4b62-9e6f-43a7a23ddbef",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795622864456
+      }
+    ],
+    "13.2 `test/properties.test.ts`, `numRuns: 20` for git-backed properties:": [
+      {
+        "executionId": "fd47214f-5928-4b62-9e6f-43a7a23ddbef",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795622865135
+      },
+      {
+        "executionId": "76039c39-0128-4a33-9aa0-fee4d6d40cfb",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795626209547
+      },
+      {
+        "executionId": "66bdeb79-11b9-4bdb-b36e-7a665d37c44d",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795626259149
+      }
+    ],
+    "13.2 `test/properties.test.ts`, git-backed properties run 5 times by default and 20": [
+      {
+        "executionId": "66bdeb79-11b9-4bdb-b36e-7a665d37c44d",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795627013550
+      }
+    ],
+    "13. Property tests": [
+      {
+        "executionId": "66bdeb79-11b9-4bdb-b36e-7a665d37c44d",
+        "chatSessionId": "sess_11b1166f-cad2-4be4-842a-c333b29bbc9f",
+        "timestamp": 1795627013653
+      }
+    ],
+    "14.1 `packages/engine/README.md`: what summoning does, `resurrect()` and": [
+      {
+        "executionId": "1656e43a-90bc-4ba3-a380-1052d005bc27",
+        "chatSessionId": "sess_d87804f1-33c1-4f39-87d3-09f1fc85a0a5",
+        "timestamp": 1795628213480
+      },
+      {
+        "executionId": "1656e43a-90bc-4ba3-a380-1052d005bc27",
+        "chatSessionId": "sess_d87804f1-33c1-4f39-87d3-09f1fc85a0a5",
+        "timestamp": 1795628265556
+      }
+    ],
+    "14. Engine README": [
+      {
+        "executionId": "1656e43a-90bc-4ba3-a380-1052d005bc27",
+        "chatSessionId": "sess_d87804f1-33c1-4f39-87d3-09f1fc85a0a5",
+        "timestamp": 1795628265968
+      }
+    ],
+    "15. Checkpoint: `npm install`, `npm run build` and `npm test` pass from a clean clone on": [
+      {
+        "executionId": "1e734ca7-859c-4594-9af9-3a71dcf487c7",
+        "chatSessionId": "sess_9cc6675e-1bd9-4c97-bf26-baaf6be4ec71",
+        "timestamp": 1795628308873
+      },
+      {
+        "executionId": "f34490b9-7397-45c6-b863-b8de75f03c85",
+        "chatSessionId": "sess_9cc6675e-1bd9-4c97-bf26-baaf6be4ec71",
+        "timestamp": 1795655645949
+      },
+      {
+        "executionId": "f34490b9-7397-45c6-b863-b8de75f03c85",
+        "chatSessionId": "sess_9cc6675e-1bd9-4c97-bf26-baaf6be4ec71",
+        "timestamp": 1795656440183
+      }
+    ]
+  }
+}
