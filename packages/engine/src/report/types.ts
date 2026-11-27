@@ -26,7 +26,7 @@ export interface SummonEntry {
   lostReason?: LostReason;
   testOutputExcerpt: string;
   durationMs: number;
-  /** 1 until optional reruns exist. */
+  /** 1 + reruns performed (1 when reruns are disabled). */
   runs: number;
   cleanupWarning?: string;
 }

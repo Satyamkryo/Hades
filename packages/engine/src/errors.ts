@@ -6,6 +6,14 @@ export class HadesConfigError extends Error {
   }
 }
 
+/** The run was aborted via an AbortSignal. Worktrees are removed before this propagates. */
+export class HadesAbortError extends Error {
+  constructor(message = "aborted") {
+    super(message);
+    this.name = "HadesAbortError";
+  }
+}
+
 /** The parent of a fix commit is missing (root commit, shallow clone). Callers map it to `lost`. */
 export class ParentUnavailableError extends Error {
   static readonly REASON = "parent commit not available";

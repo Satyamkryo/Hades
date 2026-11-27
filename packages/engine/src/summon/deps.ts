@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { throwIfAborted } from "../abort.js";
 import type { ResolvedOptions } from "../config.js";
 import type { DepsPlan } from "./deps-plan.js";
 import { runCommand } from "./process.js";
@@ -20,11 +21,12 @@ const fail = (excerpt: string): SetupDepsResult => ({
 });
 
 async function install(worktree: string, opts: SetupDepsOptions, signal?: AbortSignal): Promise<SetupDepsResult> {
-  signal?.throwIfAborted();
+  throwIfAborted(signal);
   if (!opts.installCommand) return fail("no installCommand set");
   const r = await runCommand(opts.installCommand, worktree, {
     timeoutMs: opts.installTimeoutMs,
     excerptChars: opts.excerptChars,
+    ...(signal !== undefined ? { signal } : {}),
   });
   if (r.spawnError !== undefined) return fail(`install failed to start: ${r.spawnError}`);
   if (r.timedOut) return fail(`install timed out\n${r.output}`);
@@ -40,7 +42,7 @@ export async function setupDeps(
   opts: SetupDepsOptions,
   signal?: AbortSignal,
 ): Promise<SetupDepsResult> {
-  signal?.throwIfAborted();
+  throwIfAborted(signal);
   if (plan.method === "none") return { ok: true };
   if (plan.method === "install") return install(worktree, opts, signal);
   try {

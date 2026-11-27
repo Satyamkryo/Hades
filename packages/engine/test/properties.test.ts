@@ -232,6 +232,84 @@ describe.sequential("summoning properties", () => {
     PROPERTY_TIMEOUT,
   );
 
+  it(
+    "1, 5: aborted runs leave the repo and temp dir clean",
+    async () => {
+      const tmpBefore = tempLeftovers();
+      const { HadesAbortError } = await import("../src/errors.js");
+      // Abort during confirmation (no worktree yet) and during summoning (slow test
+      // command, abort after the worktree appears). Both must reject with HadesAbortError
+      // and satisfy properties 1 (tree unchanged) and 5 (no leftovers).
+      const aborted = fc
+        .record({ kind: fc.constantFrom<"confirm" | "summon">("confirm", "summon"), dirty: fc.boolean() })
+        .chain(({ kind, dirty }) =>
+          (kind === "confirm" ? mixedFixScenario : conflictingScenario).map((scenario) => ({
+            scenario,
+            kind,
+            dirty,
+          })),
+        );
+      await fc.assert(
+        fc.asyncProperty(aborted, async ({ scenario, kind, dirty }) => {
+          const c: Case = {
+            scenario,
+            mode: "pass",
+            extra: null,
+            dirty,
+          };
+          const commits = commitsFor(c);
+          if (kind === "summon") {
+            // Slow test command so the abort lands while a worktree exists.
+            commits[0]!.files["check.mjs"] = `await new Promise((r) => setTimeout(r, 10000));\nprocess.exit(0);\n`;
+          }
+          const r = makeRepo(commits);
+          try {
+            prepareRealTree(r, c);
+            const before = snapshot(r.dir);
+            const controller = new AbortController();
+            const pending = resurrect(
+              r.dir,
+              {
+                ...optionsFor(c),
+                ...(kind === "summon" ? { testCommand: "node check.mjs", timeoutMs: 30_000 } : {}),
+              },
+              {
+                llm:
+                  kind === "confirm"
+                    ? {
+                        calls: [],
+                        async complete(system: string, user: string) {
+                          controller.abort();
+                          return byMessage().complete(system, user);
+                        },
+                      }
+                    : byMessage(),
+                signal: controller.signal,
+              },
+            );
+            if (kind === "summon") {
+              const deadline = Date.now() + 15_000;
+              while (worktreePaths(r.dir).length < 2 && Date.now() < deadline) {
+                await new Promise((res) => setTimeout(res, 25));
+                if (controller.signal.aborted) break;
+              }
+              controller.abort();
+            }
+            await expect(pending).rejects.toBeInstanceOf(HadesAbortError);
+            expect(snapshot(r.dir)).toEqual(before);
+            expect(worktreePaths(r.dir)).toHaveLength(1);
+            expect(tempLeftovers()).toEqual(tmpBefore);
+            expect(readFileSync(path.join(r.dir, "node_modules", "marker.txt"), "utf8")).toBe("marker");
+          } finally {
+            r.cleanup();
+          }
+        }),
+        GIT_RUNS,
+      );
+    },
+    PROPERTY_TIMEOUT,
+  );
+
   /**
    * The generators are random, so "more than one outcome" and "files really get reverted"
    * cannot be asserted inside a property that runs only a few times. These fixed inputs

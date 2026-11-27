@@ -3,12 +3,12 @@
 
 import type { Candidate } from "../llm/confirm-loop.js";
 import type { CandidateRule } from "../report/types.js";
+import { CLOSING_ISSUE } from "./closing-issues.js";
 import type { CommitInfo } from "./scan.js";
 
 export type { CandidateRule };
 
 const KEYWORD = /\b(fix|fixes|fixed|fixing|bugfix|bug|crash|hotfix|revert)\b/i;
-const CLOSING_ISSUE = /\b(fix|fixes|fixed|close|closes|closed|resolve|resolves|resolved)\s+#\d+\b/i;
 const REVERT_SUBJECT = /^Revert "/;
 const REVERT_BODY = /This reverts commit [0-9a-f]{7,40}/;
 

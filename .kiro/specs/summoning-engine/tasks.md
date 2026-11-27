@@ -257,8 +257,8 @@ repo root. Tasks marked `*` are optional and are done only after the real-repo c
 - [x] 15. Checkpoint: `npm install`, `npm run build` and `npm test` pass from a clean clone on
   Windows; `git status` in the Hades repo shows no stray files
 
-- [ ]* 16. Optional hardening (only after task 12 passes)
-  - [ ]* 16.1 AbortSignal support: `ResurrectDeps.signal`, `HadesAbortError`, signal
+- [x] 16. Optional hardening (only after task 12 passes)
+  - [x] 16.1 AbortSignal support: `ResurrectDeps.signal`, `HadesAbortError`, signal
     params on `runGit`, `runCommand` (kill tree on abort) and the LLM client (combined with
     the 30 s timeout, no `AbortSignal.any`); `throwIfAborted()` between phases and fixes.
     `createWorktree` never takes the signal; callers call `throwIfAborted()` right after it,
@@ -266,19 +266,19 @@ repo root. Tasks marked `*` are optional and are done only after the real-repo c
     during install, and right after worktree creation; add aborted runs to properties 1
     and 5
     - _Requirements: 7.1, 7.2, 12.5_
-  - [ ]* 16.2 Stale cleanup at run start (`src/summon/stale.ts`): parse
+  - [x] 16.2 Stale cleanup at run start (`src/summon/stale.ts`): parse
     `git worktree list --porcelain`; remove only locked `hades-summon-*` worktrees inside
     `os.tmpdir()` whose `hades pid=<pid>` names a dead process (`process.kill(pid, 0)`
     throws `ESRCH`), via unlock + `removeWorktree`; never remove unlocked ones, live-pid ones
     or non-Hades locks; fill `totals.staleCleaned`. Tests with a dead pid, the current pid,
     an unlocked `hades-summon-*` worktree and a non-Hades locked worktree
     - _Requirements: 7.3, 7.4, 7.5_
-  - [ ]* 16.3 Workspace-repo detection in `deps-plan.ts`: `workspaces` field,
+  - [x] 16.3 Workspace-repo detection in `deps-plan.ts`: `workspaces` field,
     `pnpm-workspace.yaml`, or a `node_modules` symlink resolving inside the Repo (top level
     and `@scope/`); install when `installCommand` is set, otherwise link and add the exact
     warning text; tests for each detection rule and both plan rows
     - _Requirements: 6.1, 6.3, 6.4_
-  - [ ]* 16.4 `rerunOnFail` (0–3) in config and `summon-one.ts`: rerun on non-zero exit;
+  - [x] 16.4 `rerunOnFail` (0–3) in config and `summon-one.ts`: rerun on non-zero exit;
     any passing rerun → `lost` `flaky tests`, otherwise `buried`; rerun timeout counts as a
     failed rerun; excerpt from the first failing run; `runs` count. Tests with the flaky
     `check.mjs` variant

@@ -1,3 +1,4 @@
+import { throwIfAborted } from "../abort.js";
 import { HadesConfigError } from "../errors.js";
 import type { CommitInfo } from "../history/scan.js";
 import type { CandidateRule, CommitNote } from "../report/types.js";
@@ -48,18 +49,21 @@ export async function confirmCandidates(
   let leadingTransportErrors = 0;
 
   for (const candidate of candidates) {
-    signal?.throwIfAborted();
+    throwIfAborted(signal);
     if (options.limit !== undefined && confirmed.length >= options.limit) break;
     if (checks >= options.maxLlmChecks) break;
 
     let summary: string;
     try {
       summary = await summarize(candidate.sha);
-    } catch {
+    } catch (e) {
+      // An abort during the summary must stop the run, not fall back.
+      throwIfAborted(signal);
+      if ((e as Error)?.name === "HadesAbortError") throw e;
       summary = "(diff summary unavailable)";
     }
 
-    signal?.throwIfAborted();
+    throwIfAborted(signal);
     const result = await confirmFix(client, candidate, summary);
     checks++;
 
