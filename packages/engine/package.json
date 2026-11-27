@@ -17,9 +17,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "summon": "tsx scripts/summon.ts"
+    "summon": "tsx scripts/summon.ts",
+    "history-check": "tsx scripts/history-check.ts"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20.14.0",
     "@types/picomatch": "^4.0.3",
     "fast-check": "^3.22.0",
@@ -28,6 +30,7 @@
     "vitest": "^4.1.12"
   },
   "dependencies": {
+    "better-sqlite3": "^13.2.0",
     "picomatch": "^4.0.7",
     "zod": "^4.6.7"
   }

@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { HadesAbortError } from "../errors.js";
 
 export interface RunResult {
   code: number | null;
@@ -11,6 +12,8 @@ export interface RunResult {
 export interface RunOptions {
   timeoutMs: number;
   excerptChars: number;
+  /** When aborted, the process tree is killed and the promise rejects with HadesAbortError. */
+  signal?: AbortSignal;
 }
 
 const KILL_GRACE_MS = 5000;
@@ -79,23 +82,65 @@ export function envWithoutLlmKey(
 export function runCommand(cmd: string, cwd: string, opts: RunOptions): Promise<RunResult> {
   const start = Date.now();
   const env = envWithoutLlmKey(process.env);
+  if (opts.signal?.aborted) return Promise.reject(new HadesAbortError());
 
-  return new Promise<RunResult>((resolve) => {
+  return new Promise<RunResult>((resolve, reject) => {
     let output = "";
     let timedOut = false;
     let settled = false;
     let timer: NodeJS.Timeout | undefined;
     let graceTimer: NodeJS.Timeout | undefined;
+    let abortTimer: NodeJS.Timeout | undefined;
     let spawnError: string | undefined;
+
+    const cleanupAbort = (): void => {
+      opts.signal?.removeEventListener("abort", onAbort);
+      if (abortTimer) clearTimeout(abortTimer);
+    };
 
     const finish = (code: number | null): void => {
       if (settled) return;
       settled = true;
       if (timer) clearTimeout(timer);
       if (graceTimer) clearTimeout(graceTimer);
+      cleanupAbort();
       const result: RunResult = { code, timedOut, output, durationMs: Date.now() - start };
       if (spawnError !== undefined) result.spawnError = spawnError;
       resolve(result);
+    };
+
+    const failAbort = (): void => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      if (graceTimer) clearTimeout(graceTimer);
+      cleanupAbort();
+      reject(new HadesAbortError());
+    };
+
+    let child: ChildProcess | undefined;
+
+    const onAbort = (): void => {
+      if (timer) clearTimeout(timer);
+      if (graceTimer) clearTimeout(graceTimer);
+      try {
+        if (child?.pid !== undefined) killTree(child.pid);
+      } catch {
+        // Already gone.
+      }
+      // Give the shell a moment to close, then reject even if it lingers.
+      abortTimer = setTimeout(() => {
+        if (child) {
+          activeChildren.delete(child);
+          closeChildStreams(child);
+          try {
+            child.kill("SIGKILL");
+          } catch {
+            // Streams already closed.
+          }
+        }
+        failAbort();
+      }, KILL_GRACE_MS);
     };
 
     const append = (chunk: Buffer): void => {
@@ -105,7 +150,6 @@ export function runCommand(cmd: string, cwd: string, opts: RunOptions): Promise<
       }
     };
 
-    let child: ChildProcess;
     try {
       child = spawn(cmd, {
         cwd,
@@ -122,33 +166,49 @@ export function runCommand(cmd: string, cwd: string, opts: RunOptions): Promise<
       return;
     }
 
+    if (opts.signal?.aborted) {
+      onAbort();
+      return;
+    }
+    opts.signal?.addEventListener("abort", onAbort, { once: true });
+
     child.stdout?.on("data", append);
     child.stderr?.on("data", append);
     child.on("error", (e) => {
+      if (opts.signal?.aborted) {
+        failAbort();
+        return;
+      }
       spawnError = e.message;
       finish(null);
     });
     child.on("exit", () => {
-      if (child.pid !== undefined) killTree(child.pid);
+      if (child?.pid !== undefined) killTree(child.pid);
     });
     child.on("close", (code) => {
-      activeChildren.delete(child);
+      if (child) activeChildren.delete(child);
+      if (opts.signal?.aborted) {
+        failAbort();
+        return;
+      }
       finish(code);
     });
 
     timer = setTimeout(() => {
       timedOut = true;
-      if (child.pid !== undefined) killTree(child.pid);
+      if (child?.pid !== undefined) killTree(child.pid);
       graceTimer = setTimeout(() => {
-        if (child.exitCode === null && child.signalCode === null) {
+        if (child && child.exitCode === null && child.signalCode === null) {
           spawnError = `process did not terminate within ${KILL_GRACE_MS}ms after timeout`;
         }
-        activeChildren.delete(child);
-        closeChildStreams(child);
-        try {
-          child.kill("SIGKILL");
-        } catch {
-          // The streams are already closed; preserve the termination failure as spawnError.
+        if (child) {
+          activeChildren.delete(child);
+          closeChildStreams(child);
+          try {
+            child.kill("SIGKILL");
+          } catch {
+            // The streams are already closed; preserve the termination failure as spawnError.
+          }
         }
         finish(null);
       }, KILL_GRACE_MS);

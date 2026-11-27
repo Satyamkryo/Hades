@@ -23,6 +23,7 @@ const opts = {
   excerptChars: 1000,
   extraTestPatterns: [] as string[],
   extraNonCodePatterns: [] as string[],
+  rerunOnFail: 0,
 };
 const none: DepsPlan = { method: "none", workspace: false };
 const link: DepsPlan = { method: "link", workspace: false };

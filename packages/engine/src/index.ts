@@ -11,7 +11,22 @@ export type {
   CommitNote,
   ReportTotals,
 } from "./report/types.js";
-export { HadesConfigError } from "./errors.js";
+export { HadesAbortError, HadesConfigError } from "./errors.js";
+export { throwIfAborted } from "./abort.js";
+export { askHistory } from "./ask/ask-history.js";
+export type { AskHistoryOptions, HistoryDeps } from "./ask/ask-history.js";
+export type {
+  HistoryAnswer,
+  HistoryCommit,
+  BlameRange,
+  Echo,
+  EchoConfidence,
+  EchoSource,
+} from "./ask/types.js";
+export type { GithubClient, GhResult, GhPull, GhReviewComment, GhIssue } from "./github/types.js";
+export { rankHaunted } from "./haunted/rank-haunted.js";
+export type { RankHauntedOptions } from "./haunted/rank-haunted.js";
+export type { HauntedReport, HauntedFile } from "./ask/types.js";
 export { matchRules } from "./history/candidates.js";
 export {
   makeTestFileMatcher,

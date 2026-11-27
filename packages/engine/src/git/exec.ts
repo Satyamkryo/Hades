@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { GitError } from "../errors.js";
+import { GitError, HadesAbortError } from "../errors.js";
 
 export interface GitResult {
   stdout: string;
@@ -10,6 +10,10 @@ export interface GitResult {
 export interface RunGitOptions {
   /** Return the result instead of throwing GitError on a non-zero exit. */
   allowFail?: boolean;
+  /** Text written to git's stdin, which is then closed (e.g. SHAs for `cat-file --batch-check`). */
+  input?: string;
+  /** Abort the git child process. Aborts reject with HadesAbortError. */
+  signal?: AbortSignal;
 }
 
 const REPOSITORY_ENV_OVERRIDES = new Set([
@@ -32,7 +36,9 @@ export function gitEnvironment(
   for (const name of Object.keys(env)) {
     const matchedName = platform === "win32" ? name.toUpperCase() : name;
     if (
-      REPOSITORY_ENV_OVERRIDES.has(matchedName) || matchedName === "HADES_LLM_API_KEY"
+      REPOSITORY_ENV_OVERRIDES.has(matchedName) ||
+      matchedName === "HADES_LLM_API_KEY" ||
+      matchedName === "GITHUB_TOKEN"
     ) {
       delete env[name];
     }
@@ -41,13 +47,25 @@ export function gitEnvironment(
 }
 
 /**
+ * Number of `runGit` calls made by this process. A diagnostic counter for the
+ * history reader's git process budget; deliberately not exported from `index.ts`.
+ */
+let gitCalls = 0;
+
+export function gitCallCount(): number {
+  return gitCalls;
+}
+
+/**
  * Run git without a shell (arguments are an array, so paths are never parsed by a shell).
  * GIT_TERMINAL_PROMPT=0 stops credential prompts from blocking; LC_ALL=C gives stable
  * English output for parsing.
  */
 export function runGit(cwd: string, args: string[], opts: RunGitOptions = {}): Promise<GitResult> {
+  gitCalls += 1;
+  if (opts.signal?.aborted) return Promise.reject(new HadesAbortError());
   return new Promise((resolve, reject) => {
-    execFile(
+    const child = execFile(
       "git",
       args,
       {
@@ -55,8 +73,13 @@ export function runGit(cwd: string, args: string[], opts: RunGitOptions = {}): P
         maxBuffer: 64 * 1024 * 1024,
         windowsHide: true,
         env: gitEnvironment(),
+        ...(opts.signal !== undefined ? { signal: opts.signal } : {}),
       },
       (error, stdout, stderr) => {
+        if (opts.signal?.aborted) {
+          reject(new HadesAbortError());
+          return;
+        }
         const command = `git ${args.join(" ")}`;
         if (!error) {
           resolve({ stdout, stderr, code: 0 });
@@ -75,5 +98,14 @@ export function runGit(cwd: string, args: string[], opts: RunGitOptions = {}): P
         reject(new GitError(command, code, stderr));
       },
     );
+    if (opts.input !== undefined) {
+      const stdin = child.stdin;
+      if (stdin) {
+        // git may exit before reading stdin (e.g. bad arguments); an EPIPE
+        // on a closed pipe must not crash the process.
+        stdin.on("error", () => {});
+        stdin.end(opts.input);
+      }
+    }
   });
 }

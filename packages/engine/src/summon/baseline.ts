@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { throwIfAborted } from "../abort.js";
 import type { ResolvedOptions } from "../config.js";
+import { HadesAbortError } from "../errors.js";
 import { runGit } from "../git/exec.js";
 import type { DepsPlan } from "./deps-plan.js";
 import { setupDeps } from "./deps.js";
@@ -84,70 +86,92 @@ export async function runBaseline(
   opts: BaselineOptions,
   signal?: AbortSignal,
 ): Promise<BaselineResult> {
-  signal?.throwIfAborted();
-  let wt: string;
-  try {
-    wt = await createWorktree(repo, base);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return {
-      passed: false,
-      reason: await withHints(repo, "worktree setup failed"),
-      excerpt: msg.slice(-opts.excerptChars),
-    };
-  }
-
-  const linkPath = path.join(wt, "node_modules");
+  throwIfAborted(signal);
+  let wt: string | undefined;
   let outcome: BaselineResult = {
     passed: false,
     reason: await withHints(repo, "internal error"),
     excerpt: "",
   };
   try {
-    signal?.throwIfAborted();
-    const deps = await setupDeps(repo, wt, plan, opts, signal);
-    if (!deps.ok) {
-      outcome = { passed: false, reason: await withHints(repo, deps.reason), excerpt: deps.excerpt };
-    } else {
-      signal?.throwIfAborted();
-      const r = await runCommand(opts.testCommand, wt, {
-        timeoutMs: opts.timeoutMs,
-        excerptChars: opts.excerptChars,
-      });
-      if (r.spawnError !== undefined) {
-        outcome = {
-          passed: false,
-          reason: await withHints(repo, "test command failed to start"),
-          excerpt: r.spawnError,
-        };
-      } else if (r.timedOut) {
-        outcome = { passed: false, reason: await withHints(repo, "timeout"), excerpt: r.output };
-      } else if (r.code !== 0) {
-        outcome = { passed: false, reason: await withHints(repo, "tests failed"), excerpt: r.output };
+    try {
+      wt = await createWorktree(repo, base);
+    } catch (e) {
+      throwIfAborted(signal);
+      if ((e as Error)?.name === "HadesAbortError") throw e;
+      const msg = e instanceof Error ? e.message : String(e);
+      return {
+        passed: false,
+        reason: await withHints(repo, "worktree setup failed"),
+        excerpt: msg.slice(-opts.excerptChars),
+      };
+    }
+    const linkPath = path.join(wt, "node_modules");
+    try {
+      // Right after creation, inside the try whose finally removes the worktree.
+      throwIfAborted(signal);
+      const deps = await setupDeps(repo, wt, plan, opts, signal);
+      if (!deps.ok) {
+        outcome = { passed: false, reason: await withHints(repo, deps.reason), excerpt: deps.excerpt };
       } else {
-        outcome = { passed: true, excerpt: r.output };
+        throwIfAborted(signal);
+        const r = await runCommand(opts.testCommand, wt, {
+          timeoutMs: opts.timeoutMs,
+          excerptChars: opts.excerptChars,
+          ...(signal !== undefined ? { signal } : {}),
+        });
+        if (r.spawnError !== undefined) {
+          outcome = {
+            passed: false,
+            reason: await withHints(repo, "test command failed to start"),
+            excerpt: r.spawnError,
+          };
+        } else if (r.timedOut) {
+          outcome = { passed: false, reason: await withHints(repo, "timeout"), excerpt: r.output };
+        } else if (r.code !== 0) {
+          outcome = { passed: false, reason: await withHints(repo, "tests failed"), excerpt: r.output };
+        } else {
+          outcome = { passed: true, excerpt: r.output };
+        }
+      }
+    } catch (e) {
+      if ((e as Error)?.name === "HadesAbortError") throw e;
+      if (e instanceof HadesAbortError) throw e;
+      const msg = e instanceof Error ? e.message : String(e);
+      outcome = {
+          passed: false,
+          reason: await withHints(repo, "internal error"),
+          excerpt: msg.slice(-opts.excerptChars),
+      };
+    } finally {
+      // Cleanup is independent of the test result. Retain both warning and thrown-error state.
+      // Cleanup never takes the signal.
+      try {
+        const cleanup = await removeWorktree(
+          repo,
+          wt,
+          (await isLink(linkPath)) ? linkPath : undefined,
+        );
+        if (cleanup.cleanupWarning !== undefined) outcome.cleanupWarning = cleanup.cleanupWarning;
+      } catch (e) {
+        outcome.cleanupError = e instanceof Error ? e.message : String(e);
+      }
+      outcome.worktreePath = wt;
+    }
+    return outcome;
+  } catch (e) {
+    // Abort during creation: the partial worktree is already removed by createWorktree.
+    // Abort after creation: the inner finally above already removed it.
+    if (wt !== undefined) {
+      try {
+        const linkPath = path.join(wt, "node_modules");
+        await removeWorktree(repo, wt, (await isLink(linkPath)) ? linkPath : undefined).catch(
+          () => undefined,
+        );
+      } catch {
+        // Never let cleanup hide the abort.
       }
     }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    outcome = {
-        passed: false,
-        reason: await withHints(repo, "internal error"),
-        excerpt: msg.slice(-opts.excerptChars),
-    };
-  } finally {
-    // Cleanup is independent of the test result. Retain both warning and thrown-error state.
-    try {
-      const cleanup = await removeWorktree(
-        repo,
-        wt,
-        (await isLink(linkPath)) ? linkPath : undefined,
-      );
-      if (cleanup.cleanupWarning !== undefined) outcome.cleanupWarning = cleanup.cleanupWarning;
-    } catch (e) {
-      outcome.cleanupError = e instanceof Error ? e.message : String(e);
-    }
-    outcome.worktreePath = wt;
+    throw e;
   }
-  return outcome;
 }

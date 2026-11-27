@@ -1,3 +1,4 @@
+import { throwIfAborted } from "./abort.js";
 import { resolveOptions, type ResolvedOptions, type ResurrectDeps, type ResurrectOptions } from "./config.js";
 import { changedFiles, diffSummary } from "./history/fix-diff.js";
 import { selectCandidates } from "./history/candidates.js";
@@ -13,6 +14,7 @@ import { hasTestSuite } from "./repo/test-suite.js";
 import { validateRepo } from "./repo/validate.js";
 import { runBaseline } from "./summon/baseline.js";
 import { planDeps, type DepsPlan } from "./summon/deps-plan.js";
+import { cleanStaleWorktrees } from "./summon/stale.js";
 import { summonOne } from "./summon/summon-one.js";
 
 const NO_DEPS: DepsPlan = { method: "none", workspace: false };
@@ -31,11 +33,18 @@ export async function resurrect(
 ): Promise<UnderworldReport> {
   const opts: ResolvedOptions = resolveOptions(options);
   const signal = deps.signal;
-  signal?.throwIfAborted();
+  throwIfAborted(signal);
   // Checked on the raw input: an explicit testCommand always runs as usual.
   const explicitTestCommand = options?.testCommand !== undefined;
 
   const { repo, baseSha } = await validateRepo(repoPath);
+  throwIfAborted(signal);
+  // Stale cleanup runs at the start of every run, before any new worktree exists.
+  // It takes the abort signal with a timeout bound, so cancellation interrupts
+  // waiting (not mid-removal safety gates) and the run settles promptly.
+  // Individual removal failures are still ignored; only an abort throws.
+  const staleCleaned = await cleanStaleWorktrees(repo, signal !== undefined ? { signal } : {});
+  throwIfAborted(signal);
   const apiKey = process.env["HADES_LLM_API_KEY"]?.trim() || undefined;
   const safeOptions = (): ResolvedOptions => redactOptions(opts, apiKey);
 
@@ -45,7 +54,7 @@ export async function resurrect(
     rejectedByLlm: 0,
     llmErrors: 0,
     unchecked: 0,
-    staleCleaned: 0,
+    staleCleaned,
   };
 
   if (baseSha === undefined) {
@@ -67,9 +76,11 @@ export async function resurrect(
   }
 
   const commits = await scanCommits(repo, opts.maxCommits, baseSha);
+  throwIfAborted(signal);
   const { candidates } = selectCandidates(commits);
 
   const noTests = !explicitTestCommand && !(await hasTestSuite(repo, baseSha));
+  throwIfAborted(signal);
 
   const base = {
     repo,
@@ -87,7 +98,7 @@ export async function resurrect(
     rejectedByLlm: outcome?.rejected.length ?? 0,
     llmErrors: outcome?.llmErrors.length ?? 0,
     unchecked: outcome?.unchecked ?? 0,
-    staleCleaned: 0,
+    staleCleaned,
   });
 
   // No Candidates: no LLM env, worktree or tests needed.
@@ -100,18 +111,19 @@ export async function resurrect(
   }
 
   // Fail fast on a missing LLM variable, before any worktree exists.
-  const llm: LlmClient = deps.llm ?? createOpenAiCompatibleClient(readLlmEnv());
+  const llm: LlmClient = deps.llm ?? createOpenAiCompatibleClient(readLlmEnv(), { signal });
 
   let plan: DepsPlan = NO_DEPS;
   let baseline: UnderworldReport["baseline"];
   if (!noTests) {
     plan = await planDeps(repo, opts);
+    throwIfAborted(signal);
     if (plan.warning !== undefined) base.warnings.push(plan.warning);
 
     // Baseline runs before the LLM, so a broken test suite costs no LLM calls.
-    signal?.throwIfAborted();
+    throwIfAborted(signal);
     const result = await runBaseline(repo, baseSha, plan, opts, signal);
-    signal?.throwIfAborted();
+    throwIfAborted(signal);
     baseline = result.passed
       ? { passed: true, excerpt: result.excerpt, worktreePath: result.worktreePath, cleanupWarning: result.cleanupWarning, cleanupError: result.cleanupError }
       : {
@@ -134,13 +146,14 @@ export async function resurrect(
   const outcome = await confirmCandidates(llm, candidates, opts, (sha) =>
     diffSummary(repo, sha), signal,
   );
-  signal?.throwIfAborted();
+  throwIfAborted(signal);
   base.rejected = outcome.rejected;
   base.llmErrors = outcome.llmErrors;
 
   if (noTests) {
     // Nothing is reverted or run, so no worktree is created.
     for (const fix of outcome.confirmed) {
+      throwIfAborted(signal);
       const files = await changedFiles(repo, fix.sha).catch(() => [] as string[]);
       base.unguarded.push({
         sha: fix.sha,
@@ -153,9 +166,9 @@ export async function resurrect(
   } else {
     // One at a time: predictable CPU, disk and port use, and simple cleanup.
     for (const fix of outcome.confirmed) {
-      signal?.throwIfAborted();
+      throwIfAborted(signal);
       base.entries.push(await summonOne(repo, baseSha, fix, plan, opts, signal));
-      signal?.throwIfAborted();
+      throwIfAborted(signal);
     }
   }
 

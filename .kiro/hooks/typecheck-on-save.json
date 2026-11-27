@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Typecheck on save",
+      "description": "Runs `npm run build` from the repo root when an engine source or script file is saved. Shell command only: no agent prompt, never edits source files.",
+      "trigger": "PostFileSave",
+      "matcher": "packages[\\\\/]engine[\\\\/](src|scripts)[\\\\/].*\\.ts$",
+      "action": { "type": "command", "command": "npm run build" },
+      "timeout": 120,
+      "enabled": true
+    }
+  ]
+}

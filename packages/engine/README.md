@@ -122,6 +122,49 @@ required, and a missing one is named in the error.
 | `HADES_LLM_API_KEY` | API key. Never logged, never in reports, hidden from test commands. |
 | `HADES_LLM_MODEL` | Model name. |
 
+## History reader
+
+`askHistory()` answers "what does history say about this file?": the commits
+that touched a file, line range or symbol, one echo (history evidence) per
+commit, and warnings.
+
+```ts
+import { askHistory } from "@hades/engine";
+
+const answer = await askHistory("/absolute/path/to/repo", "src/pay.ts", {
+  lines: [10, 20],
+  symbol: "charge",
+});
+```
+
+Signature: `askHistory(repo, file, options?, deps?)`.
+
+- `repo` must be an absolute path to the top level of a git repo. `file` is a
+  repo-relative path (deleted files have history too). Invalid input throws
+  `HadesConfigError` before any git call.
+- Everything is read-only: git and GitHub are only read, and nothing is
+  written to the repo, `.kiro/` or GitHub. The only file written is the cache
+  at `~/.hades/<repo-id>.db` (override with `deps.hadesHome`, never inside
+  the repo).
+- GitHub context (linked PRs and issues) is optional: it runs only when the
+  repo's `origin` is on `github.com`, uses GET requests only, and stays
+  within `maxGithubRequests` per question (0 turns it off). Pass your own
+  client as `deps.github`, or `null` to turn it off. Without a token the
+  client works unauthenticated.
+- Echoes come from the commit message, PR and issue bodies, or from an LLM
+  when one is configured (`deps.llm`, or the `HADES_LLM_*` variables from
+  the LLM section above). `deps.llm: null` turns the LLM off; fewer than
+  `maxLlmChecks` commits get an LLM slot, the rest use the rule order.
+- Secrets come only from the environment: `GITHUB_TOKEN` for GitHub, the
+  `HADES_LLM_*` variables for the LLM. Both are stripped from git child
+  processes and redacted from every warning.
+- `deps` also takes `llmModel`, `now` (clock, used by tests) and `env`
+  (environment, used by tests), as `resurrect()` does.
+
+Options: `lines` (a `[start, end]` tuple), `symbol` (function name),
+`maxCommits` (50), `excerptChars` (4000), `maxGithubRequests` (30),
+`githubTimeoutMs` (10000), `githubTtlMs` (86400000), `maxLlmChecks` (5).
+
 ## Run from the command line
 
 From the repo root:

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GitError } from "../src/errors.js";
-import { gitEnvironment, runGit } from "../src/git/exec.js";
+import { gitCallCount, gitEnvironment, runGit } from "../src/git/exec.js";
 import { makeRepo } from "./helpers/repo.js";
 
 describe("runGit", () => {
@@ -28,6 +28,21 @@ describe("runGit", () => {
       expect(Object.keys(env).filter((name) => name.toUpperCase() === "HADES_LLM_API_KEY")).toEqual([]);
     } else {
       expect(env.hades_llm_api_key).toBe("variant");
+    }
+  });
+
+  it("removes the GitHub token while preserving unrelated Git environment", () => {
+    const env = gitEnvironment({
+      GITHUB_TOKEN: "secret",
+      github_token: "variant",
+      KEEP_ME: "yes",
+    });
+    expect(env.KEEP_ME).toBe("yes");
+    expect(env.GITHUB_TOKEN).toBeUndefined();
+    if (process.platform === "win32") {
+      expect(Object.keys(env).filter((name) => name.toUpperCase() === "GITHUB_TOKEN")).toEqual([]);
+    } else {
+      expect(env.github_token).toBe("variant");
     }
   });
 
@@ -85,5 +100,24 @@ describe("runGit", () => {
     } finally {
       repo.cleanup();
     }
+  });
+
+  it("writes input to stdin and closes it", async () => {
+    const repo = makeRepo([{ message: "init", files: { "a.txt": "a" } }]);
+    try {
+      const sha = repo.shas[0] ?? "";
+      expect(sha).toMatch(/^[0-9a-f]{40}$/);
+      const r = await runGit(repo.dir, ["cat-file", "--batch-check"], { input: `${sha}\n` });
+      expect(r.code).toBe(0);
+      expect(r.stdout.trim()).toMatch(new RegExp(`^${sha} commit \\d+$`));
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it("counts every runGit call", async () => {
+    const before = gitCallCount();
+    await runGit(process.cwd(), ["--version"]);
+    expect(gitCallCount()).toBe(before + 1);
   });
 });

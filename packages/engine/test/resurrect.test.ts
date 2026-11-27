@@ -54,7 +54,7 @@ describe("resurrect end to end", () => {
         return inner.complete(system, user);
       },
     };
-    await expect(resurrect(r.dir, opts, { llm, signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+    await expect(resurrect(r.dir, opts, { llm, signal: controller.signal })).rejects.toMatchObject({ name: "HadesAbortError" });
     expect(worktreeCount(r.dir)).toBe(1);
   });
   it("labels escaped and buried, rejects non-fixes, and leaves the repo untouched", async () => {
